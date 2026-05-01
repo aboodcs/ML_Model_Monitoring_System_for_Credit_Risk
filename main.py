@@ -13,6 +13,7 @@ if _project_root not in sys.path:
 from src.creditrisk.pipeline.stage_01_data_ingestion import DataIngestionTrainingPipeline
 from src.creditrisk.pipeline.stage_02_data_validation import DataValidationTrainingPipeline
 from src.creditrisk.pipeline.stage_03_data_transformation import DataTransformationTrainingPipeline
+from src.creditrisk.pipeline.stage_04_model_trainer import ModelTrainerPipeline
 from src.creditrisk.utils import logger
 
 
@@ -43,6 +44,16 @@ try:
     logger.info(f">>>>> stage {STAGE_NAME} started <<<<<")
     data_transformation = DataTransformationTrainingPipeline()
     data_transformation.initiate_data_transformation()
+    logger.info(f">>>>> stage {STAGE_NAME} completed <<<<<\n\nx==========x")
+except Exception as e:
+    logger.exception(e)
+    raise
+
+STAGE_NAME = "Model Trainer Stage"
+try:
+    logger.info(f">>>>> stage {STAGE_NAME} started <<<<<")
+    model_trainer = ModelTrainerPipeline()
+    model_trainer.initiate_model_trainer()
     logger.info(f">>>>> stage {STAGE_NAME} completed <<<<<\n\nx==========x")
 except Exception as e:
     logger.exception(e)
