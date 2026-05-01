@@ -1,0 +1,4 @@
+# We will add model parameters here later (e.g. for RandomForest or XGBoost)
+RandomForest:
+  n_estimators: 100
+  max_depth: 10
