@@ -1,7 +1,6 @@
 import sys
 import os
 
-# ── Make both 'src.creditrisk' and venv packages importable ──────────────────
 _project_root = os.path.dirname(os.path.abspath(__file__))
 _venv_site_packages = os.path.join(_project_root, "env", "lib", "python3.12", "site-packages")
 if _venv_site_packages not in sys.path:
@@ -14,6 +13,7 @@ from src.creditrisk.pipeline.stage_01_data_ingestion import DataIngestionTrainin
 from src.creditrisk.pipeline.stage_02_data_validation import DataValidationTrainingPipeline
 from src.creditrisk.pipeline.stage_03_data_transformation import DataTransformationTrainingPipeline
 from src.creditrisk.pipeline.stage_04_model_trainer import ModelTrainerPipeline
+from src.creditrisk.pipeline.stage_05_model_evaluation import ModelEvaluationPipeline
 from src.creditrisk.utils import logger
 
 
@@ -49,6 +49,7 @@ except Exception as e:
     logger.exception(e)
     raise
 
+
 STAGE_NAME = "Model Trainer Stage"
 try:
     logger.info(f">>>>> stage {STAGE_NAME} started <<<<<")
@@ -58,3 +59,14 @@ try:
 except Exception as e:
     logger.exception(e)
     raise
+
+
+STAGE_NAME = "Model Evaluation Stage"
+try:
+    logger.info(f">>>>> stage {STAGE_NAME} started <<<<<")
+    model_evaluation = ModelEvaluationPipeline()
+    model_evaluation.initiate_model_evaluation()
+    logger.info(f">>>>> stage {STAGE_NAME} completed <<<<<\n\nx==========x")
+except Exception as e:
+    logger.exception(e)
+    raise e

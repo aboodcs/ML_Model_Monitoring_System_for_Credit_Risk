@@ -15,9 +15,13 @@ class DataTransformation:
     def clean_data(self, df):
         df_clean = df.copy()
         df_clean = df_clean.drop_duplicates()
-        numeric_cols = df_clean.iloc[:, :-1].select_dtypes(include=[np.number]).columns
-        outliers_mask = pd.Series([False] * len(df_clean), index=df_clean.index)
+        numeric_cols = df_clean.select_dtypes(include=[np.number]).columns.tolist()
+        # Remove target from outlier removal
+        target = "credit_card_default"
+        if target in numeric_cols:
+            numeric_cols.remove(target)
 
+        outliers_mask = pd.Series([False] * len(df_clean), index=df_clean.index)
         for col in numeric_cols:
             Q1 = df_clean[col].quantile(0.25)
             Q3 = df_clean[col].quantile(0.75)
@@ -32,37 +36,52 @@ class DataTransformation:
         return df_clean
 
     def initiate_data_transformation(self):
-        df = pd.read_csv(self.config.data_path, skiprows=1)
-        df = df.drop(columns=df.columns[0], axis=1)  # Drop ID column
+        df = pd.read_csv(self.config.data_path)
         logger.info(f"Loaded data: {df.shape[0]} rows, {df.shape[1]} columns")
+
+        # Drop non-feature identifier columns
+        df = df.drop(columns=["customer_id", "name"], errors="ignore")
+
+        # Impute missing values before cleaning
+        for col in df.select_dtypes(include=[np.number]).columns:
+            df[col] = df[col].fillna(df[col].median())
+        for col in df.select_dtypes(include=["object"]).columns:
+            df[col] = df[col].fillna(df[col].mode()[0])
 
         df_clean = self.clean_data(df)
 
-        X = df_clean.iloc[:, :-1]
-        y = df_clean.iloc[:, -1]
+        # One-hot encode categorical columns
+        categorical_cols = df_clean.select_dtypes(include=["object"]).columns.tolist()
+        if categorical_cols:
+            df_clean = pd.get_dummies(df_clean, columns=categorical_cols, drop_first=True)
+            logger.info(f"One-hot encoded categorical columns. New shape: {df_clean.shape}")
+
+        # Separate features and target
+        target_col = "credit_card_default"
+        y = df_clean.pop(target_col)
+        X = df_clean
 
         # 60/20/20 split — test=20%, then val=25% of 80% = 20%
         X_temp, X_test, y_temp, y_test = train_test_split(
             X, y, random_state=42, stratify=y, test_size=0.2)
-
         X_train, X_val, y_train, y_val = train_test_split(
             X_temp, y_temp, random_state=42, stratify=y_temp, test_size=0.25)
 
         # Fit scaler ONLY on training data to prevent data leakage
         scaler = StandardScaler()
         X_train = pd.DataFrame(scaler.fit_transform(X_train), columns=X.columns)
-        X_val = pd.DataFrame(scaler.transform(X_val), columns=X.columns)
-        X_test = pd.DataFrame(scaler.transform(X_test), columns=X.columns)
+        X_val   = pd.DataFrame(scaler.transform(X_val),       columns=X.columns)
+        X_test  = pd.DataFrame(scaler.transform(X_test),      columns=X.columns)
 
         logger.info(f"Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}")
 
         # Save splits
         X_train.to_csv(os.path.join(self.config.root_dir, "X_train.csv"), index=False)
-        X_val.to_csv(os.path.join(self.config.root_dir, "X_val.csv"), index=False)
-        X_test.to_csv(os.path.join(self.config.root_dir, "X_test.csv"), index=False)
+        X_val.to_csv(  os.path.join(self.config.root_dir, "X_val.csv"),   index=False)
+        X_test.to_csv( os.path.join(self.config.root_dir, "X_test.csv"),  index=False)
         y_train.to_csv(os.path.join(self.config.root_dir, "y_train.csv"), index=False)
-        y_val.to_csv(os.path.join(self.config.root_dir, "y_val.csv"), index=False)
-        y_test.to_csv(os.path.join(self.config.root_dir, "y_test.csv"), index=False)
+        y_val.to_csv(  os.path.join(self.config.root_dir, "y_val.csv"),   index=False)
+        y_test.to_csv( os.path.join(self.config.root_dir, "y_test.csv"),  index=False)
 
         # Save scaler
         with open(self.config.preprocessor_path, "wb") as f:

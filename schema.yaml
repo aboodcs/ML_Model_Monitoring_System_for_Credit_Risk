@@ -1,28 +1,21 @@
 COLUMNS:
-  LIMIT_BAL: int64
-  SEX: int64
-  EDUCATION: int64
-  MARRIAGE: int64
-  AGE: int64
-  PAY_0: int64
-  PAY_2: int64
-  PAY_3: int64
-  PAY_4: int64
-  PAY_5: int64
-  PAY_6: int64
-  BILL_AMT1: int64
-  BILL_AMT2: int64
-  BILL_AMT3: int64
-  BILL_AMT4: int64
-  BILL_AMT5: int64
-  BILL_AMT6: int64
-  PAY_AMT1: int64
-  PAY_AMT2: int64
-  PAY_AMT3: int64
-  PAY_AMT4: int64
-  PAY_AMT5: int64
-  PAY_AMT6: int64
-  default payment next month: int64
+  age: int64
+  gender: object
+  owns_car: object
+  owns_house: object
+  no_of_children: float64
+  net_yearly_income: float64
+  no_of_days_employed: float64
+  occupation_type: object
+  total_family_members: float64
+  migrant_worker: float64
+  yearly_debt_payments: float64
+  credit_limit: float64
+  credit_limit_used(%): int64
+  credit_score: float64
+  prev_defaults: int64
+  default_in_last_6months: int64
+  credit_card_default: int64
 
 TARGET_COLUMN:
-  name: default payment next month
+  name: credit_card_default

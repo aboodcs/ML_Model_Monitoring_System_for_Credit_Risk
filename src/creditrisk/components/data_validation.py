@@ -11,23 +11,22 @@ class DataValidation:
     def validate_all_columns(self) -> bool:
         """
         Validate all columns in the dataset against the schema.
+        Drops non-feature columns (customer_id, name) before checking.
         """
         try:
             validation_status = True
 
-            # Read the extracted data file
-            data_file = os.path.join(self.config.unzip_data_dir, "credit_risk.csv")
-            # Skip the first row (extra header) and drop the ID column
-            df = pd.read_csv(data_file, skiprows=1)
-            df = df.drop(columns=df.columns[0], axis=1)
+            data_file = os.path.join(self.config.unzip_data_dir, "train.csv")
+            df = pd.read_csv(data_file)
 
-            # Get expected columns from schema
-            all_schema_columns = self.config.all_schema.keys()
+            # Drop identifier columns not in schema
+            df = df.drop(columns=["customer_id", "name"], errors="ignore")
 
-            # Get actual columns from the dataframe
+            # Get expected columns from schema (features + target)
+            all_schema_columns = list(self.config.all_schema.keys())
+
             df_columns = df.columns.tolist()
 
-            # Validate each column
             for col in df_columns:
                 if col not in all_schema_columns:
                     validation_status = False
@@ -36,7 +35,6 @@ class DataValidation:
             if validation_status:
                 logger.info("All columns validated successfully against schema")
 
-            # Write validation status to file
             with open(self.config.STATUS_FILE, 'w') as f:
                 f.write(f"Validation Status: {'Passed' if validation_status else 'Failed'}")
 
