@@ -3,7 +3,6 @@ import urllib.request as request
 from src.creditrisk.utils import logger
 from src.creditrisk.entity.config_entity import DataIngestionConfig
 
-
 class DataIngestion:
     def __init__(self, config: DataIngestionConfig):
         self.config = config
@@ -11,7 +10,6 @@ class DataIngestion:
     def download_data(self):
         """
         Downloads the train CSV directly from GitHub using urllib (no auth needed).
-        source_URL in config.yaml is the raw GitHub URL to train.csv.
         """
         if not os.path.exists(self.config.local_data_file):
             filename, headers = request.urlretrieve(

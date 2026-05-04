@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CreditSense — ML Credit Risk Monitor</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #07090f;
+            --surface: #0e1220;
+            --border: #1c2438;
+            --accent: #00e5a0;
+            --accent2: #3b82f6;
+            --danger: #ff4d6d;
+            --warn: #f59e0b;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --card: #111827;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 229, 160, .04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 160, .04) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: rgba(0, 229, 160, .08);
+            top: -150px;
+            right: -100px;
+        }
+
+        .blob-2 {
+            width: 400px;
+            height: 400px;
+            background: rgba(59, 130, 246, .07);
+            bottom: 100px;
+            left: -120px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem 2.5rem;
+            background: rgba(7, 9, 15, .8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: .875rem;
+            font-weight: 500;
+            transition: color .2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .nav-cta {
+            background: var(--accent);
+            color: #07090f;
+            border: none;
+            padding: .55rem 1.3rem;
+            border-radius: 6px;
+            font-family: 'DM Mono', monospace;
+            font-size: .8rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: box-shadow .2s, opacity .2s;
+        }
+
+        .nav-cta:hover {
+            box-shadow: 0 0 20px rgba(0, 229, 160, .4);
+            opacity: .9;
+        }
+
+        .hero {
+            position: relative;
+            z-index: 1;
+            padding: 10rem 2.5rem 6rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: rgba(0, 229, 160, .08);
+            border: 1px solid rgba(0, 229, 160, .2);
+            padding: .35rem .9rem;
+            border-radius: 999px;
+            font-family: 'DM Mono', monospace;
+            font-size: .72rem;
+            color: var(--accent);
+            margin-bottom: 1.8rem;
+            animation: fadeUp .6s ease both;
+        }
+
+        .hero-badge span {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .3
+            }
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -.03em;
+            margin-bottom: 1.5rem;
+            animation: fadeUp .6s .1s ease both;
+        }
+
+        h1 .line2 {
+            display: block;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--muted);
+            line-height: 1.7;
+            max-width: 580px;
+            margin-bottom: 2.5rem;
+            animation: fadeUp .6s .2s ease both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            animation: fadeUp .6s .3s ease both;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #07090f;
+            border: none;
+            padding: .85rem 2rem;
+            border-radius: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: .875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            transition: box-shadow .2s, transform .15s;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 30px rgba(0, 229, 160, .35);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: .85rem 2rem;
+            border-radius: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: .875rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            transition: border-color .2s, background .2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            background: rgba(0, 229, 160, .05);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .stats-strip {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 0 2.5rem 5rem;
+            overflow: hidden;
+        }
+
+        .stat {
+            background: var(--surface);
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: .3rem;
+        }
+
+        .stat-label {
+            font-size: .8rem;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+        }
+
+        section {
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2.5rem 6rem;
+        }
+
+        .section-tag {
+            font-family: 'DM Mono', monospace;
+            font-size: .72rem;
+            color: var(--accent);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -.02em;
+        }
+
+        .section-sub {
+            color: var(--muted);
+            max-width: 520px;
+            line-height: 1.7;
+            margin-bottom: 3rem;
+        }
+
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .pipe-step {
+            background: var(--card);
+            padding: 2rem 1.5rem;
+            position: relative;
+            transition: background .2s;
+        }
+
+        .pipe-step:hover {
+            background: #162030;
+        }
+
+        .pipe-num {
+            font-family: 'DM Mono', monospace;
+            font-size: .65rem;
+            color: var(--muted);
+            margin-bottom: 1.2rem;
+            letter-spacing: .08em;
+        }
+
+        .pipe-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .pipe-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: .95rem;
+            margin-bottom: .5rem;
+        }
+
+        .pipe-desc {
+            font-size: .8rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .pipe-arrow {
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: var(--border);
+            clip-path: polygon(0 0, 100% 50%, 0 100%);
+            z-index: 2;
+        }
+
+        .pipe-step:last-child .pipe-arrow {
+            display: none;
+        }
+
+        /* ── Error banner ── */
+        .error-banner {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto 2rem;
+            padding: 0 2.5rem;
+        }
+
+        .error-box {
+            background: rgba(255, 77, 109, .08);
+            border: 1px solid rgba(255, 77, 109, .3);
+            border-radius: 10px;
+            padding: 1rem 1.4rem;
+            font-family: 'DM Mono', monospace;
+            font-size: .8rem;
+            color: var(--danger);
+            display: flex;
+            align-items: flex-start;
+            gap: .7rem;
+        }
+
+        /* ── Predict form ── */
+        .form-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .form-info h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .form-info p {
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: .9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .field-list {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        .field-item {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            font-family: 'DM Mono', monospace;
+            font-size: .78rem;
+            color: var(--muted);
+        }
+
+        .field-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        form {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            font-family: 'DM Mono', monospace;
+            font-size: .72rem;
+            color: var(--muted);
+            margin-bottom: .4rem;
+            letter-spacing: .06em;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: .65rem .9rem;
+            font-family: 'DM Mono', monospace;
+            font-size: .85rem;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            -webkit-appearance: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 229, 160, .1);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 1.5rem;
+            background: var(--accent);
+            color: #07090f;
+            border: none;
+            padding: .9rem;
+            border-radius: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: .875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: box-shadow .2s, opacity .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+        }
+
+        .submit-btn:hover {
+            box-shadow: 0 0 24px rgba(0, 229, 160, .35);
+            opacity: .9;
+        }
+
+        .submit-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* Loading state */
+        .submit-btn .spinner {
+            display: none;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(7, 9, 15, .3);
+            border-top-color: #07090f;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .tech-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .tech-chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: .6rem 1.2rem;
+            font-family: 'DM Mono', monospace;
+            font-size: .8rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            transition: border-color .2s, color .2s;
+        }
+
+        .tech-chip:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .tech-chip-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        footer {
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid var(--border);
+            padding: 2rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        footer p {
+            font-size: .8rem;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            font-size: .8rem;
+            color: var(--muted);
+            text-decoration: none;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        @media (max-width: 900px) {
+            .pipeline {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .stats-strip {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-wrap {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .pipeline {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-strip {
+                margin: 0 1.5rem 3rem;
+            }
+
+            nav {
+                padding: 1rem 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 7rem 1.5rem 4rem;
+            }
+
+            .section-inner {
+                padding: 0 1.5rem 4rem;
+            }
+
+            .error-banner {
+                padding: 0 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <nav>
+        <div class="logo">
+            <div class="logo-dot"></div>CreditSense
+        </div>
+        <div class="nav-links">
+            <a href="#pipeline">Pipeline</a>
+            <a href="#predict">Predict</a>
+            <a href="https://github.com/aboodcs/ML_Model_Monitoring_System_for_Credit_Risk" target="_blank">GitHub</a>
+        </div>
+        <a href="#predict" class="nav-cta">→ Run Prediction</a>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-badge"><span></span> ML Model Monitoring · Credit Risk</div>
+        <h1>
+            Predict Credit Risk<br>
+            <span class="line2">with Machine Learning</span>
+        </h1>
+        <p class="hero-desc">
+            An end-to-end ML pipeline for credit risk assessment — from raw data ingestion to real-time inference, with
+            full model monitoring and MLflow tracking.
+        </p>
+        <div class="hero-actions">
+            <a href="#predict" class="btn-primary">⚡ Try the Model</a>
+            <a href="https://github.com/aboodcs/ML_Model_Monitoring_System_for_Credit_Risk" target="_blank"
+                class="btn-secondary">↗ View Source</a>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-strip">
+        <div class="stat">
+            <div class="stat-val">5</div>
+            <div class="stat-label">Pipeline Stages</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val">XGBoost</div>
+            <div class="stat-label">Core Model</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val">MLflow</div>
+            <div class="stat-label">Experiment Tracking</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val">Docker</div>
+            <div class="stat-label">Containerized</div>
+        </div>
+    </div>
+
+    <!-- PIPELINE -->
+    <section id="pipeline">
+        <div class="section-inner">
+            <div class="section-tag">// ML Workflow</div>
+            <h2 class="section-title">End-to-End Pipeline</h2>
+            <p class="section-sub">A fully automated, modular pipeline that takes raw credit data and turns it into
+                actionable risk predictions.</p>
+            <div class="pipeline">
+                <div class="pipe-step">
+                    <div class="pipe-num">01 ––</div>
+                    <div class="pipe-icon" style="background:rgba(0,229,160,.1)">📥</div>
+                    <div class="pipe-name">Data Ingestion</div>
+                    <div class="pipe-desc">Fetches CSV from source URL → <code
+                            style="color:var(--accent);font-size:.75rem">artifacts/data_ingestion/</code></div>
+                    <div class="pipe-arrow"></div>
+                </div>
+                <div class="pipe-step">
+                    <div class="pipe-num">02 ––</div>
+                    <div class="pipe-icon" style="background:rgba(59,130,246,.1)">🧹</div>
+                    <div class="pipe-name">Data Validation</div>
+                    <div class="pipe-desc">Schema & type checks → writes <code
+                            style="color:var(--accent);font-size:.75rem">status.txt</code></div>
+                    <div class="pipe-arrow"></div>
+                </div>
+                <div class="pipe-step">
+                    <div class="pipe-num">03 ––</div>
+                    <div class="pipe-icon" style="background:rgba(245,158,11,.1)">🔄</div>
+                    <div class="pipe-name">Transformation</div>
+                    <div class="pipe-desc">Encoding + scaling → exports <code
+                            style="color:var(--accent);font-size:.75rem">scaler.pkl</code></div>
+                    <div class="pipe-arrow"></div>
+                </div>
+                <div class="pipe-step">
+                    <div class="pipe-num">04 ––</div>
+                    <div class="pipe-icon" style="background:rgba(139,92,246,.1)">🤖</div>
+                    <div class="pipe-name">Model Training</div>
+                    <div class="pipe-desc">Trains → saves <code
+                            style="color:var(--accent);font-size:.75rem">model.joblib</code> + MLflow log</div>
+                    <div class="pipe-arrow"></div>
+                </div>
+                <div class="pipe-step">
+                    <div class="pipe-num">05 ––</div>
+                    <div class="pipe-icon" style="background:rgba(255,77,109,.1)">📊</div>
+                    <div class="pipe-name">Evaluation</div>
+                    <div class="pipe-desc">Accuracy, AUC, F1 → <code
+                            style="color:var(--accent);font-size:.75rem">metrics.json</code></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ERROR BANNER (Jinja2 — only shown if Flask passes error) -->
+    {% if error %}
+    <div class="error-banner">
+        <div class="error-box">
+            <span>⚠</span>
+            <span><strong>Prediction failed:</strong> {{ error }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PREDICT FORM -->
+    <section id="predict">
+        <div class="section-inner">
+            <div class="section-tag">// Live Inference</div>
+            <h2 class="section-title">Credit Risk Prediction</h2>
+            <p class="section-sub">Fill in applicant details to get an instant credit risk assessment from the trained
+                model.</p>
+
+            <div class="form-wrap">
+                <div class="form-info">
+                    <h3>Input Features</h3>
+                    <p>The model was trained on credit application data. Provide accurate values for best results — the
+                        pipeline applies the same <code style="color:var(--accent)">scaler.pkl</code> preprocessing at
+                        inference time.</p>
+                    <div class="field-list">
+                        <div class="field-item">
+                            <div class="field-dot"></div>person_age — Applicant's age
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>person_income — Annual income (USD)
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>person_emp_length — Employment length (years)
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>loan_amnt — Requested loan amount
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>loan_int_rate — Interest rate (%)
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>loan_percent_income — Loan as % of income
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>cb_person_cred_hist_length — Credit history (years)
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>person_home_ownership — RENT / OWN / MORTGAGE
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>loan_intent — Purpose of loan
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>loan_grade — Grade A–G
+                        </div>
+                        <div class="field-item">
+                            <div class="field-dot"></div>cb_person_default_on_file — Prior default Y/N
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POST to Flask /predict route -->
+                <form action="/predict" method="POST" id="predictForm">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="person_age">PERSON_AGE</label>
+                            <input type="number" id="person_age" name="person_age" placeholder="e.g. 28" min="18"
+                                max="100" step="1" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="person_income">PERSON_INCOME (USD)</label>
+                            <input type="number" id="person_income" name="person_income" placeholder="e.g. 65000"
+                                min="0" step="1" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="person_emp_length">EMP_LENGTH (YRS)</label>
+                            <input type="number" id="person_emp_length" name="person_emp_length" placeholder="e.g. 5"
+                                min="0" step="0.5" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="loan_amnt">LOAN_AMOUNT (USD)</label>
+                            <input type="number" id="loan_amnt" name="loan_amnt" placeholder="e.g. 10000" min="0"
+                                step="1" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="loan_int_rate">INTEREST_RATE (%)</label>
+                            <input type="number" id="loan_int_rate" name="loan_int_rate" placeholder="e.g. 12.5" min="0"
+                                max="100" step="0.01" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="loan_percent_income">LOAN % OF INCOME</label>
+                            <input type="number" id="loan_percent_income" name="loan_percent_income"
+                                placeholder="e.g. 0.15" min="0" max="1" step="0.01" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cb_person_cred_hist_length">CREDIT_HIST_LENGTH (YRS)</label>
+                            <input type="number" id="cb_person_cred_hist_length" name="cb_person_cred_hist_length"
+                                placeholder="e.g. 6" min="0" step="1" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="person_home_ownership">HOME_OWNERSHIP</label>
+                            <select id="person_home_ownership" name="person_home_ownership" required>
+                                <option value="" disabled selected>Select…</option>
+                                <option value="RENT">RENT</option>
+                                <option value="OWN">OWN</option>
+                                <option value="MORTGAGE">MORTGAGE</option>
+                                <option value="OTHER">OTHER</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="loan_intent">LOAN_INTENT</label>
+                            <select id="loan_intent" name="loan_intent" required>
+                                <option value="" disabled selected>Select…</option>
+                                <option value="PERSONAL">PERSONAL</option>
+                                <option value="EDUCATION">EDUCATION</option>
+                                <option value="MEDICAL">MEDICAL</option>
+                                <option value="VENTURE">VENTURE</option>
+                                <option value="HOMEIMPROVEMENT">HOME IMPROVEMENT</option>
+                                <option value="DEBTCONSOLIDATION">DEBT CONSOLIDATION</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="loan_grade">LOAN_GRADE</label>
+                            <select id="loan_grade" name="loan_grade" required>
+                                <option value="" disabled selected>Select…</option>
+                                <option value="A">A — Best</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="G">G — Worst</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cb_person_default_on_file">DEFAULT ON FILE</label>
+                        <select id="cb_person_default_on_file" name="cb_person_default_on_file" required>
+                            <option value="" disabled selected>Select…</option>
+                            <option value="N">N — No prior default</option>
+                            <option value="Y">Y — Has prior default</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <div class="spinner" id="spinner"></div>
+                        <span id="btnText">⚡ Analyze Credit Risk</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECH STACK -->
+    <section>
+        <div class="section-inner">
+            <div class="section-tag">// Stack</div>
+            <h2 class="section-title">Built With</h2>
+            <p class="section-sub" style="margin-bottom:2rem;">Industry-standard tools for robust ML system engineering.
+            </p>
+            <div class="tech-grid">
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#f7c948"></div>Python 3.x
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#0070f3"></div>XGBoost
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#00e5a0"></div>MLflow
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#2496ed"></div>Docker
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#f05032"></div>GitHub Actions
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#e25822"></div>Flask
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#150458"></div>Pandas + NumPy
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#3b82f6"></div>Scikit-learn
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#ffd43b"></div>PyYAML
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip-dot" style="background:#9333ea"></div>Joblib
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2024 CreditSense · ML Model Monitoring System for Credit Risk</p>
+        <div class="footer-links">
+            <a href="https://github.com/aboodcs/ML_Model_Monitoring_System_for_Credit_Risk" target="_blank">GitHub</a>
+            <a href="#pipeline">Pipeline</a>
+            <a href="#predict">Predict</a>
+        </div>
+    </footer>
+
+    <script>
+        // Show loading spinner on submit
+        document.getElementById('predictForm').addEventListener('submit', function () {
+            const btn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('spinner');
+            const txt = document.getElementById('btnText');
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            txt.textContent = 'Running inference…';
+        });
+    </script>
+</body>
+
+</html>

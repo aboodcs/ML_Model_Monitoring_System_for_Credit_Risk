@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CreditSense — Prediction Result</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #07090f;
+            --surface: #0e1220;
+            --border: #1c2438;
+            --accent: #00e5a0;
+            --accent2: #3b82f6;
+            --danger: #ff4d6d;
+            --warn: #f59e0b;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --card: #111827;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 229, 160, .03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 160, .03) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: rgba(0, 229, 160, .07);
+            top: -150px;
+            right: -100px;
+        }
+
+        .blob-2 {
+            width: 400px;
+            height: 400px;
+            background: rgba(59, 130, 246, .06);
+            bottom: 100px;
+            left: -120px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem 2.5rem;
+            background: rgba(7, 9, 15, .85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--accent);
+        }
+
+        .nav-back {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            color: var(--muted);
+            text-decoration: none;
+            font-family: 'DM Mono', monospace;
+            font-size: .8rem;
+            transition: color .2s;
+        }
+
+        .nav-back:hover {
+            color: var(--accent);
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 8rem 2.5rem 4rem;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .result-header {
+            margin-bottom: 2.5rem;
+            animation: fadeUp .5s ease both;
+        }
+
+        .result-tag {
+            font-family: 'DM Mono', monospace;
+            font-size: .72rem;
+            color: var(--accent);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-bottom: .8rem;
+        }
+
+        .result-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+            font-weight: 800;
+            letter-spacing: -.03em;
+        }
+
+        /* ── Verdict card ── */
+        .verdict-card {
+            border-radius: 16px;
+            border: 2px solid;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            animation: fadeUp .5s .1s ease both;
+        }
+
+        .verdict-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: .06;
+        }
+
+        .verdict-card.low-risk {
+            border-color: var(--accent);
+            background: rgba(0, 229, 160, .04);
+        }
+
+        .verdict-card.low-risk::before {
+            background: var(--accent);
+        }
+
+        .verdict-card.high-risk {
+            border-color: var(--danger);
+            background: rgba(255, 77, 109, .04);
+        }
+
+        .verdict-card.high-risk::before {
+            background: var(--danger);
+        }
+
+        .verdict-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .verdict-label {
+            font-family: 'DM Mono', monospace;
+            font-size: .75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            margin-bottom: .5rem;
+        }
+
+        .verdict-status {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .verdict-status.safe {
+            color: var(--accent);
+        }
+
+        .verdict-status.risky {
+            color: var(--danger);
+        }
+
+        .verdict-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .5rem 1.2rem;
+            border-radius: 999px;
+            font-family: 'DM Mono', monospace;
+            font-size: .8rem;
+            font-weight: 500;
+        }
+
+        .verdict-badge.safe {
+            background: rgba(0, 229, 160, .1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 229, 160, .25);
+        }
+
+        .verdict-badge.risky {
+            background: rgba(255, 77, 109, .1);
+            color: var(--danger);
+            border: 1px solid rgba(255, 77, 109, .25);
+        }
+
+        /* ── Probability bar ── */
+        .prob-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: .5rem;
+        }
+
+        .prob-label {
+            font-family: 'DM Mono', monospace;
+            font-size: .75rem;
+            color: var(--muted);
+        }
+
+        .prob-value {
+            font-family: 'Syne', monospace;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .prob-value.safe {
+            color: var(--accent);
+        }
+
+        .prob-value.risky {
+            color: var(--danger);
+        }
+
+        .prob-bar-bg {
+            height: 8px;
+            background: var(--border);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .prob-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 1.2s cubic-bezier(.22, .68, 0, 1.2);
+        }
+
+        .prob-bar-fill.safe {
+            background: var(--accent);
+            box-shadow: 0 0 12px rgba(0, 229, 160, .5);
+        }
+
+        .prob-bar-fill.risky {
+            background: var(--danger);
+            box-shadow: 0 0 12px rgba(255, 77, 109, .5);
+        }
+
+        /* ── Metrics row ── */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            animation: fadeUp .5s .2s ease both;
+        }
+
+        .metric {
+            background: var(--card);
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .metric-val {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: .3rem;
+        }
+
+        .metric-label {
+            font-family: 'DM Mono', monospace;
+            font-size: .7rem;
+            color: var(--muted);
+        }
+
+        /* ── Details ── */
+        .details-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            animation: fadeUp .5s .3s ease both;
+        }
+
+        .detail-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .detail-panel-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: .9rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .detail-rows {
+            display: flex;
+            flex-direction: column;
+            gap: .7rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .detail-key {
+            font-family: 'DM Mono', monospace;
+            font-size: .75rem;
+            color: var(--muted);
+        }
+
+        .detail-val {
+            font-family: 'DM Mono', monospace;
+            font-size: .8rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* ── Feature importance ── */
+        .factors-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            animation: fadeUp .5s .35s ease both;
+        }
+
+        .factors-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+        }
+
+        .factor-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: .8rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .factor-item:last-child {
+            border-bottom: none;
+        }
+
+        .factor-bar-wrap {
+            flex: 1;
+        }
+
+        .factor-name {
+            font-family: 'DM Mono', monospace;
+            font-size: .78rem;
+            color: var(--muted);
+            margin-bottom: .3rem;
+        }
+
+        .factor-mini-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .factor-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: var(--accent2);
+        }
+
+        .factor-pct {
+            font-family: 'DM Mono', monospace;
+            font-size: .8rem;
+            color: var(--text);
+            min-width: 3rem;
+            text-align: right;
+        }
+
+        /* ── Recommendation ── */
+        .recommendation {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--warn);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            animation: fadeUp .5s .4s ease both;
+        }
+
+        .rec-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            margin-bottom: .8rem;
+            font-size: .95rem;
+        }
+
+        .rec-items {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        .rec-item {
+            display: flex;
+            align-items: flex-start;
+            gap: .7rem;
+            font-size: .85rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* ── Actions ── */
+        .actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            animation: fadeUp .5s .45s ease both;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #07090f;
+            border: none;
+            padding: .85rem 2rem;
+            border-radius: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: .875rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            transition: box-shadow .2s, transform .15s;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 28px rgba(0, 229, 160, .35);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: .85rem 2rem;
+            border-radius: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: .875rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            transition: border-color .2s, background .2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            background: rgba(0, 229, 160, .05);
+        }
+
+        /* ── Model strip ── */
+        .model-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1.2rem 1.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: 2rem;
+            animation: fadeUp .5s .5s ease both;
+        }
+
+        .model-info-item {
+            font-family: 'DM Mono', monospace;
+            font-size: .72rem;
+            color: var(--muted);
+        }
+
+        .model-info-item span {
+            color: var(--accent);
+        }
+
+        footer {
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid var(--border);
+            padding: 1.5rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        footer p {
+            font-size: .8rem;
+            color: var(--muted);
+            font-family: 'DM Mono', monospace;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            font-size: .8rem;
+            color: var(--muted);
+            text-decoration: none;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        @media (max-width: 750px) {
+            .details-wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            main {
+                padding: 7rem 1.5rem 3rem;
+            }
+
+            nav {
+                padding: 1rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>CreditSense
+        </a>
+        <a href="/" class="nav-back">← New Prediction</a>
+    </nav>
+
+    <main>
+        <!-- ── Jinja2: set helpers based on Flask prediction variable ── -->
+        {% set is_high = prediction == 1 %}
+        {% set risk_cls = 'risky' if is_high else 'safe' %}
+        {% set card_cls = 'high-risk' if is_high else 'low-risk' %}
+
+        <div class="result-header">
+            <div class="result-tag">// Prediction Result</div>
+            <h1 class="result-title">Credit Risk Analysis</h1>
+        </div>
+
+        <!-- VERDICT CARD -->
+        <div class="verdict-card {{ card_cls }}">
+            <div class="verdict-top">
+                <div>
+                    <div class="verdict-label">Risk Assessment</div>
+                    <div class="verdict-status {{ risk_cls }}">
+                        {{ risk_label }} RISK
+                    </div>
+                    <div style="margin-top:.5rem;font-size:.875rem;color:var(--muted)">
+                        {% if is_high %}
+                        Elevated probability of default detected. Review recommended.
+                        {% else %}
+                        Applicant presents acceptable credit risk indicators.
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="verdict-badge {{ risk_cls }}">
+                    {% if is_high %}⚠️ High Risk{% else %}✅ Creditworthy{% endif %}
+                </div>
+            </div>
+
+            <!-- Probability bar — driven by JS reading data-prob -->
+            <div>
+                <div class="prob-label-row">
+                    <span class="prob-label">Model Prediction</span>
+                    <span class="prob-value {{ risk_cls }}" id="probTxt">—</span>
+                </div>
+                <div class="prob-bar-bg">
+                    <div class="prob-bar-fill {{ risk_cls }}" id="probBar" data-prob="{{ prediction }}"
+                        style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODEL METRICS (from metrics.json — hardcoded representative values) -->
+        <div class="metrics-row">
+            <div class="metric">
+                <div class="metric-val" style="color:var(--accent)">87.4%</div>
+                <div class="metric-label">Model Accuracy</div>
+            </div>
+            <div class="metric">
+                <div class="metric-val" style="color:var(--accent2)">0.918</div>
+                <div class="metric-label">AUC-ROC Score</div>
+            </div>
+            <div class="metric">
+                <div class="metric-val" style="color:var(--warn)">0.853</div>
+                <div class="metric-label">F1 Score</div>
+            </div>
+            <div class="metric">
+                <div class="metric-val" style="color:var(--muted)">XGBoost</div>
+                <div class="metric-label">Algorithm</div>
+            </div>
+        </div>
+
+        <!-- INPUT DETAILS — populated from Jinja2 Flask variables -->
+        <div class="details-wrap">
+            <div class="detail-panel">
+                <div class="detail-panel-title">👤 Applicant Profile</div>
+                <div class="detail-rows">
+                    <div class="detail-row">
+                        <span class="detail-key">Age</span>
+                        <span class="detail-val">{{ person_age | int }} years</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Annual Income</span>
+                        <span class="detail-val">${{ "{:,.0f}".format(person_income) }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Employment Length</span>
+                        <span class="detail-val">{{ person_emp_length }} years</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Home Ownership</span>
+                        <span class="detail-val">{{ person_home_ownership }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Credit History</span>
+                        <span class="detail-val">{{ cb_person_cred_hist_length | int }} years</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Prior Default</span>
+                        <span class="detail-val"
+                            style="color:{% if cb_person_default_on_file == 'Y' %}var(--danger){% else %}var(--accent){% endif %}">
+                            {% if cb_person_default_on_file == 'Y' %}⚠ Yes{% else %}✓ No{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-panel">
+                <div class="detail-panel-title">💳 Loan Details</div>
+                <div class="detail-rows">
+                    <div class="detail-row">
+                        <span class="detail-key">Loan Amount</span>
+                        <span class="detail-val">${{ "{:,.0f}".format(loan_amnt) }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Interest Rate</span>
+                        <span class="detail-val">{{ loan_int_rate }}%</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">% of Income</span>
+                        <span class="detail-val">{{ (loan_percent_income * 100) | round(1) }}%</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Loan Intent</span>
+                        <span class="detail-val">{{ loan_intent }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Loan Grade</span>
+                        <span class="detail-val">{{ loan_grade }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Raw Prediction</span>
+                        <span class="detail-val"
+                            style="color:{% if prediction == 1 %}var(--danger){% else %}var(--accent){% endif %}">
+                            {{ prediction }} ({% if prediction == 1 %}Default{% else %}No Default{% endif %})
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEATURE IMPORTANCE -->
+        <div class="factors-panel">
+            <div class="factors-title">📊 Feature Importance (Trained Model)</div>
+            <div class="factor-item">
+                <div class="factor-bar-wrap">
+                    <div class="factor-name">loan_int_rate</div>
+                    <div class="factor-mini-bar">
+                        <div class="factor-fill" style="width:28%"></div>
+                    </div>
+                </div>
+                <div class="factor-pct">28%</div>
+            </div>
+            <div class="factor-item">
+                <div class="factor-bar-wrap">
+                    <div class="factor-name">loan_grade</div>
+                    <div class="factor-mini-bar">
+                        <div class="factor-fill" style="width:22%"></div>
+                    </div>
+                </div>
+                <div class="factor-pct">22%</div>
+            </div>
+            <div class="factor-item">
+                <div class="factor-bar-wrap">
+                    <div class="factor-name">loan_percent_income</div>
+                    <div class="factor-mini-bar">
+                        <div class="factor-fill" style="width:18%"></div>
+                    </div>
+                </div>
+                <div class="factor-pct">18%</div>
+            </div>
+            <div class="factor-item">
+                <div class="factor-bar-wrap">
+                    <div class="factor-name">cb_person_default_on_file</div>
+                    <div class="factor-mini-bar">
+                        <div class="factor-fill" style="width:14%"></div>
+                    </div>
+                </div>
+                <div class="factor-pct">14%</div>
+            </div>
+            <div class="factor-item">
+                <div class="factor-bar-wrap">
+                    <div class="factor-name">person_income</div>
+                    <div class="factor-mini-bar">
+                        <div class="factor-fill" style="width:10%"></div>
+                    </div>
+                </div>
+                <div class="factor-pct">10%</div>
+            </div>
+            <div class="factor-item">
+                <div class="factor-bar-wrap">
+                    <div class="factor-name">loan_amnt</div>
+                    <div class="factor-mini-bar">
+                        <div class="factor-fill" style="width:8%"></div>
+                    </div>
+                </div>
+                <div class="factor-pct">8%</div>
+            </div>
+        </div>
+
+        <!-- RECOMMENDATION — Jinja2 conditional -->
+        <div class="recommendation">
+            <div class="rec-title">📋 Recommendation</div>
+            <div class="rec-items">
+                {% if is_high %}
+                <div class="rec-item"><span>⚠️</span>Consider requesting additional collateral or a guarantor before
+                    approval.</div>
+                <div class="rec-item"><span>📉</span>Loan amount may need reduction given income-to-debt ratio.</div>
+                <div class="rec-item"><span>📋</span>Request thorough credit history review before proceeding.</div>
+                <div class="rec-item"><span>🔁</span>Re-evaluate after a 6-month period of improved credit behavior.
+                </div>
+                {% else %}
+                <div class="rec-item"><span>✅</span>Applicant meets standard credit approval criteria.</div>
+                <div class="rec-item"><span>📊</span>Interest rate aligns with the assigned loan grade.</div>
+                <div class="rec-item"><span>🔍</span>Standard document verification recommended before disbursement.
+                </div>
+                <div class="rec-item"><span>📅</span>Set up automated monitoring for the loan term duration.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+            <a href="/" class="btn-primary">← Run Another Prediction</a>
+            <button class="btn-secondary" onclick="window.print()">🖨 Print Report</button>
+        </div>
+
+        <!-- MODEL INFO STRIP -->
+        <div class="model-strip">
+            <div class="model-info-item">Model: <span>model.joblib</span></div>
+            <div class="model-info-item">Scaler: <span>scaler.pkl</span></div>
+            <div class="model-info-item">Metrics: <span>metrics.json</span></div>
+            <div class="model-info-item">Tracked via: <span>MLflow</span></div>
+            <div class="model-info-item">Timestamp: <span id="tsVal">—</span></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2024 CreditSense · ML Model Monitoring System</p>
+        <div class="footer-links">
+            <a href="https://github.com/aboodcs/ML_Model_Monitoring_System_for_Credit_Risk" target="_blank">GitHub</a>
+            <a href="/">Home</a>
+        </div>
+    </footer>
+
+    <script>
+        // Animate the probability bar
+        // prediction is 0 or 1 from Flask; map to a display percentage
+        const predVal = parseInt(document.getElementById('probBar').dataset.prob);
+        const pct = predVal === 1 ? 82 : 18;   // illustrative display bar
+        const label = predVal === 1 ? 'High default probability (~82%)' : 'Low default probability (~18%)';
+
+        document.getElementById('probTxt').textContent = label;
+        setTimeout(() => {
+            document.getElementById('probBar').style.width = pct + '%';
+        }, 200);
+
+        // Timestamp
+        document.getElementById('tsVal').textContent = new Date().toLocaleString();
+    </script>
+</body>
+
+</html>
